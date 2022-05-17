@@ -6,6 +6,7 @@ import PIL.ImageTk
 import time
 import datetime as dt
 import argparse
+import numpy as np
 
 
 class App:
@@ -28,26 +29,27 @@ class App:
 
         # Button that lets the user take a snapshot
         self.btn_snapshot = tk.Button(
-            window, text="Snapshot", command=self.snapshot)
+            window, bg='blue', fg='white', text="Snapshot", command=self.snapshot)
         self.btn_snapshot.pack(side=tk.LEFT)
 
         # video control buttons
 
         self.btn_start = tk.Button(
-            window, text='START', command=self.open_camera)
+            window, bg='blue', fg='white', text='Start', command=self.open_camera)
         self.btn_start.pack(side=tk.LEFT)
 
         self.btn_stop = tk.Button(
-            window, text='STOP', command=self.close_camera)
+            window, bg='blue', fg='white', text='Stop', command=self.close_camera)
         self.btn_stop.pack(side=tk.LEFT)
 
         # hsv button
         self.btn_hsv = tk.Button(
-            window, text='HSV', command=self.hsv)
+            window, bg='blue', fg='white', text='HSV', command=self.hsv)
         self.btn_hsv.pack(side=tk.LEFT)
 
         # quit button
-        self.btn_quit = tk.Button(window, text='QUIT', command=quit)
+        self.btn_quit = tk.Button(
+            window, bg='blue', fg='white', text='Quit', command=self.quit_app)
         self.btn_quit.pack(side=tk.LEFT)
 
         # After it is called once, the update method will be automatically called every delay milliseconds
@@ -61,7 +63,7 @@ class App:
         ret, frame = self.vid.get_frame()
 
         if ret:
-            cv2.imwrite("frame-"+time.strftime("%d-%m-%Y-%H-%M-%S") +
+            cv2.imwrite("capture-"+time.strftime("%d-%m-%Y-%H-%M-%S") +
                         ".jpg", cv2.cvtColor(frame, cv2.COLOR_RGB2BGR))
 
     def open_camera(self):
@@ -73,6 +75,10 @@ class App:
         self.ok = False
         self.timer.stop()
         print("camera closed => Not Recording")
+
+    def quit_app(self):
+        self.window.destroy()
+        print('Quit application')
 
     def update(self):
 
@@ -87,36 +93,46 @@ class App:
             self.canvas.create_image(0, 0, image=self.photo, anchor=tk.NW)
         self.window.after(self.delay, self.update)
 
-    def nothing(x):
-        pass
-
     def hsv(self, video_source=0):
         cap = cv2.VideoCapture(self.video_source)
-        cv2.namedWindow('image')
-        cv2.createTrackbar('lowH', 'image', 0, 180, nothing)
-        cv2.createTrackbar('highH', 'image', 179, 180, nothing)
-        cv2.createTrackbar('lowS', 'image', 0, 250, nothing)
-        cv2.createTrackbar('highS', 'image', 255, 255, nothing)
-        cv2.createTrackbar('lowV', 'image', 0, 250, nothing)
-        cv2.createTrackbar('highV', 'image', 255, 255, nothing)
         while True:
-            _, src = cap.read()
-            # dat vi tri tren slider
-            ilowH = cv2.getTrackbarPos('lowH', 'image')
-            ihighH = cv2.getTrackbarPos('highH', 'image')
-            ilowS = cv2.getTrackbarPos('lowS', 'image')
-            ihighS = cv2.getTrackbarPos('highS', 'image')
-            ilowV = cv2.getTrackbarPos('lowV', 'image')
-            ihighV = cv2.getTrackbarPos('highV', 'image')
-            # chuyen khong gian sang HSV
-            hsv = cv2.cvtColor(src, cv2.COLOR_RGB2HSV)
-            # phan nguong trong khong gian HSV
-            mask = cv2.inRange(hsv, (ilowH, ilowS, ilowV),
-                               (ihighH, ihighS, ihighV))
+            # Cap will read each frame
+            _, frame = cap.read()
+            # Convert frames to format call hsv
+            hsv_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+            # Red color
+            low_red = np.array([161, 155, 84])
+            high_red = np.array([179, 255, 255])
+            red_mask = cv2.inRange(hsv_frame, low_red, high_red)
+            red = cv2.bitwise_and(frame, frame, mask=red_mask)
+            # Blue color
+            low_blue = np.array([94, 80, 2])
+            high_blue = np.array([126, 255, 255])
+            blue_mask = cv2.inRange(hsv_frame, low_blue, high_blue)
+            blue = cv2.bitwise_and(frame, frame, mask=blue_mask)
 
-            # su dung mask de loc mau voi anh goc
-            result = cv2.bitwise_or(src, src, mask=mask)
-            cv2.imshow("image", result)
+            # Green color
+            low_green = np.array([25, 52, 72])
+            high_green = np.array([102, 255, 255])
+            green_mask = cv2.inRange(hsv_frame, low_green, high_green)
+            # Using bitwise_and to convert bitwise to rgb
+            # np.bitwise_and(array1, array2, out)
+            green = cv2.bitwise_and(frame, frame, mask=green_mask)
+
+            # Every color except white
+            low = np.array([0, 42, 0])
+            high = np.array([179, 255, 255])
+            mask = cv2.inRange(hsv_frame, low, high)
+            result = cv2.bitwise_and(frame, frame, mask=mask)
+            cv2.imshow("Frame", frame)
+            cv2.imshow("Red", red)
+            cv2.imshow("Blue", blue)
+            cv2.imshow("Green", green)
+            cv2.imshow("Result", result)
+            # Using to wait for a specific time interval and then close the active image window
+            key = cv2.waitKey(1)
+            if key == 27:
+                break
 
 
 class VideoCapture:
