@@ -7,6 +7,7 @@ import time
 import datetime as dt
 import argparse
 import numpy as np
+import sys
 
 
 class App:
@@ -46,6 +47,11 @@ class App:
         self.btn_hsv = tk.Button(
             window, bg='blue', fg='white', text='HSV', command=self.hsv)
         self.btn_hsv.pack(side=tk.LEFT)
+
+        # face detection btn
+        self.btn_face = tk.Button(
+            window, bg='blue', fg='white', text='Face Detection', command=self.faceDetect)
+        self.btn_face.pack(side=tk.LEFT)
 
         # quit button
         self.btn_quit = tk.Button(
@@ -130,9 +136,46 @@ class App:
             cv2.imshow("Green", green)
             cv2.imshow("Result", result)
             # Using to wait for a specific time interval and then close the active image window
-            key = cv2.waitKey(1)
-            if key == 27:
+            if cv2.waitKey(1) & 0xFF == ord('q'):
                 break
+        cap.release()
+        cv2.destroyAllWindows()
+
+    def faceDetect(self, video_source=0):
+        cap = cv2.VideoCapture(0)
+
+        # Create the haar cascade
+        faceCascade = cv2.CascadeClassifier(
+            "haarcascade_frontalface_default.xml")
+
+        while(True):
+            # Capture frame-by-frame
+            ret, frame = cap.read()
+
+            # Our operations on the frame come here
+            gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+
+            # Detect faces in the image
+            faces = faceCascade.detectMultiScale(
+                gray,
+                scaleFactor=1.1,
+                minNeighbors=5,
+                minSize=(30, 30)
+                #flags = cv2.CV_HAAR_SCALE_IMAGE
+            )
+
+            print("Found {0} faces!".format(len(faces)))
+
+            # Draw a rectangle around the faces
+            for (x, y, w, h) in faces:
+                cv2.rectangle(frame, (x, y), (x+w, y+h), (0, 255, 0), 2)
+
+            # Display the resulting frame
+            cv2.imshow('frame', frame)
+            if cv2.waitKey(1) & 0xFF == ord('q'):
+                break
+        cap.release()
+        cv2.destroyAllWindows()
 
 
 class VideoCapture:
@@ -266,7 +309,7 @@ class CommandLineParser:
 
 def main():
     # Create a window and pass it to the Application object
-    App(tk.Tk(), 'Video Recorder')
+    App(tk.Tk(), 'Project Python')
 
 
 main()
