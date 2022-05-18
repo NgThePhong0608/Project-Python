@@ -7,7 +7,6 @@ import time
 import datetime as dt
 import argparse
 import numpy as np
-import sys
 
 
 class App:
@@ -138,7 +137,6 @@ class App:
             # Using to wait for a specific time interval and then close the active image window
             if cv2.waitKey(1) & 0xFF == ord('q'):
                 break
-        cap.release()
         cv2.destroyAllWindows()
 
     def faceDetect(self, video_source=0):
@@ -156,6 +154,7 @@ class App:
             gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
             # Detect faces in the image
+            eye_cascade = cv2.CascadeClassifier('haarcascade_eye.xml')
             faces = faceCascade.detectMultiScale(
                 gray,
                 scaleFactor=1.1,
@@ -168,13 +167,23 @@ class App:
 
             # Draw a rectangle around the faces
             for (x, y, w, h) in faces:
-                cv2.rectangle(frame, (x, y), (x+w, y+h), (0, 255, 0), 2)
+                cv2.rectangle(frame, (x, y), (x+w, y+h), (255, 255, 0), 2)
+                roi_gray = gray[y:y+h, x:x+w]
+                roi_color = frame[y:y+h, x:x+w]
+
+                # Detects eyes of different sizes in the input image
+                eyes = eye_cascade.detectMultiScale(roi_gray)
+
+                # To draw a rectangle in eyes
+                for (ex, ey, ew, eh) in eyes:
+                    cv2.rectangle(roi_color, (ex, ey),
+                                  (ex+ew, ey+eh), (0, 127, 255), 2)
 
             # Display the resulting frame
             cv2.imshow('frame', frame)
-            if cv2.waitKey(1) & 0xFF == ord('q'):
+            if cv2.waitKey(27) & 0xFF == ord('q'):
                 break
-        cap.release()
+            # cap.release()
         cv2.destroyAllWindows()
 
 
