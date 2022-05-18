@@ -44,7 +44,7 @@ class App:
 
         # hsv button
         self.btn_hsv = tk.Button(
-            window, bg='blue', fg='white', text='HSV', command=self.hsv)
+            window, bg='blue', fg='white', text='Color Object Detection', command=self.hsv)
         self.btn_hsv.pack(side=tk.LEFT)
 
         # face detection btn
