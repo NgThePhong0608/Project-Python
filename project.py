@@ -44,12 +44,12 @@ class App:
 
         # hsv button
         self.btn_hsv = tk.Button(
-            window, bg='blue', fg='white', text='Color Object Detection', command=self.hsv)
+            window, bg='blue', fg='white', text='COD', command=self.hsv)
         self.btn_hsv.pack(side=tk.LEFT)
 
         # face detection btn
         self.btn_face = tk.Button(
-            window, bg='blue', fg='white', text='Face Detection', command=self.faceDetect)
+            window, bg='blue', fg='white', text='FE Detection', command=self.faceDetect)
         self.btn_face.pack(side=tk.LEFT)
 
         # quit button
